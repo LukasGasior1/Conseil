@@ -9,13 +9,13 @@ object Runners {
       runner in conf
     )
 
-  lazy val devConfig = "ivano-dev.conf"
+  lazy val devConfigOption = "-Dconfig.resource=ivano-dev.conf"
 
   lazy val Lorre = config("lorre") extend(Compile) describedAs("lorre-specific settings")
   lazy val Conseil = config("conseil") extend(Compile) describedAs("conseil-specific settings")
 
   lazy val develOpts = Seq(
-    s"-Dconfig.file=src/main/resources/$devConfig",
+    devConfigOption,
     "-XX:+CMSClassUnloadingEnabled",
     "-Xss1M"
   )
@@ -34,9 +34,9 @@ object Runners {
     )
 
   lazy val testCoverageOpts = Seq(
+    devConfigOption,
     "-Xms512M",
-    "-Xmx1024M",
-    s"-Dconfig.file=src/main/resources/$devConfig"
+    "-Xmx1024M"
   )
 
 }
