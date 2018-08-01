@@ -41,6 +41,7 @@ configs(Lorre, Conseil)
 javaOptions in Test ++= testCoverageOpts
 
 cancelable in Global := true
+fork in Global := true
 
 fork in Lorre := true
 fork in Conseil := true
@@ -51,5 +52,5 @@ mainClass in Conseil := Some("tech.cryptonomic.conseil.Conseil")
 javaOptions in Lorre ++= lorreOpts
 javaOptions in Conseil ++= conseilOpts
 
-run in Lorre := runIn(Lorre).evaluated
-run in Conseil := runIn(Conseil).evaluated
+run in Lorre := runIn(Lorre)
+run in Conseil := runIn(Conseil)

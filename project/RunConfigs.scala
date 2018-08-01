@@ -5,9 +5,9 @@ object Runners {
   def runIn(conf: ConfigKey) =
     Defaults.runTask(
       fullClasspath in Runtime,
-      mainClass in conf,
-      runner in conf
-    )
+      mainClass in (conf, run),
+      runner in (conf, run)
+    ).evaluated
 
   lazy val Lorre = config("lorre") extend(Compile) describedAs("lorre-specific settings")
   lazy val Conseil = config("conseil") extend(Compile) describedAs("conseil-specific settings")
