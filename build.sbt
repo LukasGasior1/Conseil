@@ -36,19 +36,20 @@ excludeDependencies ++= Seq(
 
 assemblyOutputPath in assembly := file(s"/tmp/conseil-${version.value}.jar")
 
+configs(Lorre, Conseil)
+
 javaOptions in Test ++= testCoverageOpts
 
 cancelable in Global := true
 
 fork in Lorre := true
-mainClass in Lorre := Some("tech.cryptonomic.conseil.Lorre")
-javaOptions in Lorre ++= lorreOpts
-
 fork in Conseil := true
+
+mainClass in Lorre := Some("tech.cryptonomic.conseil.Lorre")
 mainClass in Conseil := Some("tech.cryptonomic.conseil.Conseil")
+
+javaOptions in Lorre ++= lorreOpts
 javaOptions in Conseil ++= conseilOpts
 
 run in Lorre := runIn(Lorre).evaluated
 run in Conseil := runIn(Conseil).evaluated
-
-configs(Lorre, Conseil)
