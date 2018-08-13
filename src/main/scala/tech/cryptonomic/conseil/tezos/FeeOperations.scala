@@ -1,11 +1,19 @@
 package tech.cryptonomic.conseil.tezos
 
+import com.codahale.metrics.{MetricRegistry, Timer}
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import tech.cryptonomic.conseil.Lorre.db
+<<<<<<< HEAD
 import tech.cryptonomic.conseil.tezos.{TezosDatabaseOperations => Tdb}
 
 import scala.concurrent.{Future, ExecutionContext}
+=======
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Await
+import scala.concurrent.duration.{Duration, SECONDS}
+>>>>>>> benchmarks/blocking-fees-computation
 import scala.util.{Failure, Success, Try}
 import slick.dbio.DBIOAction
 
@@ -45,14 +53,18 @@ object FeeOperations extends LazyLogging {
     * Calculates average fees for each operation kind and stores them into a fees table.
     * @return
     */
-  def processTezosAverageFees()(implicit ex: ExecutionContext): Future[Option[Int]] = {
+  def processTezosAverageFees(timer: Option[Timer])(implicit ex: ExecutionContext): Future[Option[Int]] = {
     logger.info("Processing latest Tezos fee data...")
+    val timing = timer.map(_.time())
     val computeAndStore = for {
       fees <- DBIOAction.sequence(operationKinds.map(Tdb.calculateAverageFeesIO))
       dbWrites <- Tdb.writeFeesIO(fees.collect{ case Some(fee) => fee })
     } yield dbWrites
 
     db.run(computeAndStore)
+      .andThen {
+        case _ => timing.foreach(_.stop())
+      }
       .andThen{
         case Success(Some(written)) => logger.info("Wrote {} average fees to the database.", written)
         case Success(None) => logger.info("Wrote average fees to the database.")
