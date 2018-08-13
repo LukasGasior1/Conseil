@@ -1,10 +1,11 @@
 package tech.cryptonomic.conseil.tezos
 
+import com.codahale.metrics.{MetricRegistry, Timer}
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import tech.cryptonomic.conseil.Lorre.db
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import scala.concurrent.duration.{Duration, SECONDS}
 import scala.util.{Failure, Success, Try}
@@ -37,9 +38,10 @@ object FeeOperations extends LazyLogging {
     * Calculates average fees for each operation kind and stores them into a fees table.
     * @return
     */
-  def processTezosAverageFees(): Try[Unit] = {
+  def processTezosAverageFees(timer: Option[Timer]): Try[Unit] = {
     logger.info("Processing latest Tezos fee data...")
     val operationKinds = List("seed_nonce_revelation", "delegation", "transaction", "activate_account", "origination", "reveal", "double_endorsement_evidence", "endorsement")
+    val timing = timer.map(_.time())
     val fees = operationKinds.map(TezosDatabaseOperations.calculateAverageFees)
     Try {
       val dbFut = TezosDatabaseOperations.writeFeesToDatabase(fees, db)
@@ -48,6 +50,7 @@ object FeeOperations extends LazyLogging {
         case Failure(e) => logger.error(s"Could not write average fees to the database because $e")
       }
       Await.result(dbFut, Duration.Inf)
+      timing.foreach(_.stop())
     }
   }
 

@@ -1,5 +1,8 @@
 package tech.cryptonomic.conseil
 
+import java.util.concurrent.TimeUnit
+
+import com.codahale.metrics.{Clock, ConsoleReporter, MetricRegistry}
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import tech.cryptonomic.conseil.tezos.{FeeOperations, TezosDatabaseOperations, TezosNodeInterface, TezosNodeOperator}
@@ -24,7 +27,7 @@ object Lorre extends App with LazyLogging {
       | Please provide a valid network as an argument to the command line""".stripMargin)
       sys.exit(1)
     }
-  
+
 
   private val conf = ConfigFactory.load
   private val awaitTimeInSeconds = conf.getInt("dbAwaitTimeInSeconds")
@@ -35,12 +38,26 @@ object Lorre extends App with LazyLogging {
   lazy val db = DatabaseUtil.db
   val tezosNodeOperator = new TezosNodeOperator(TezosNodeInterface)
 
+  val metrics = {
+    val registry = new MetricRegistry
+    val reporter = ConsoleReporter.forRegistry(registry)
+        .convertRatesTo(TimeUnit.MILLISECONDS)
+        .convertDurationsTo(TimeUnit.MILLISECONDS)
+        .build()
+    reporter.start(sleepIntervalInSeconds / 2, TimeUnit.SECONDS)
+    Some(registry)
+  }
+
+  val feesTimer = metrics.map(
+    _.timer(MetricRegistry.name(FeeOperations.getClass, "tezos-average-fees", "time"))
+  )
+
   @tailrec
   def mainLoop(iteration: Int): Unit = {
       processTezosBlocks()
       processTezosAccounts()
       if (iteration % feeUpdateInterval == 0) {
-        FeeOperations.processTezosAverageFees()
+        FeeOperations.processTezosAverageFees(feesTimer)
       }
       if (iteration % purgeAccountsInterval == 0) {
         TezosDatabaseOperations.purgeOldAccounts()
