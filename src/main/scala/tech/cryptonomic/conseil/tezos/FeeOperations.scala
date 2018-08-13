@@ -1,21 +1,13 @@
 package tech.cryptonomic.conseil.tezos
 
-import com.codahale.metrics.{MetricRegistry, Timer}
-import com.typesafe.config.ConfigFactory
+import com.codahale.metrics.Timer
 import com.typesafe.scalalogging.LazyLogging
+import slick.dbio.DBIOAction
 import tech.cryptonomic.conseil.Lorre.db
-<<<<<<< HEAD
 import tech.cryptonomic.conseil.tezos.{TezosDatabaseOperations => Tdb}
 
-import scala.concurrent.{Future, ExecutionContext}
-=======
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
-import scala.concurrent.duration.{Duration, SECONDS}
->>>>>>> benchmarks/blocking-fees-computation
-import scala.util.{Failure, Success, Try}
-import slick.dbio.DBIOAction
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 /**
   * Helper classes and functions used for average fee calculations.
